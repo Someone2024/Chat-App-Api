@@ -1,5 +1,5 @@
 // middleware.js
-const jwt = require('./jwt');
+const jwt = require('./Auth');
 
 // Middleware function to check if the token is valid
 const checkAuth = (req, res, next) => {
@@ -14,7 +14,7 @@ const checkAuth = (req, res, next) => {
     const decodedToken = jwt.verifyToken(token);
 
     // Attach the decoded token to the request object for use in other routes
-    req.userId = decodedToken.userId;
+    req.username = decodedToken.username;
 
     // Move to the next middleware/route handler
     next();
@@ -24,6 +24,4 @@ const checkAuth = (req, res, next) => {
   }
 };
 
-module.exports = {
-  checkAuth,
-};
+module.exports = checkAuth
