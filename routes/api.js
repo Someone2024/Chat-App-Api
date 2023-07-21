@@ -4,10 +4,10 @@ const loginController = require("../controllers/loginController")
 const messagesController = require("../controllers/messagesController")
 const checkAuth = require("../controllers/CheckAuth")
 
-router("/login", loginController.logIn)
+router.post("/login", loginController.login)
 
-router("/messages", checkAuth.checkAuth, messagesController.displayMessages)
+router.get("/messages", checkAuth, messagesController.displayMessages)
 
-router("/messages/send-message", checkAuth.checkAuth, messagesController.sendMessage)
+router.post("/messages/send-message", checkAuth, messagesController.sendMessage)
 
 module.exports = router;
