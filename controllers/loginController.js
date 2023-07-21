@@ -1,27 +1,36 @@
 // authController.js
-const jwt = require('./jwt');
-const User = require('../models/User');
+const jwt = require('./Auth');
+const createUser = require('../models/User');
+const { collection, query, where, getDocs, limit } = require('firebase/firestore');
+const db = require("./FirebaseController")
 
-exports.logIn = async (req, res) => {
+exports.login = async (req, res) => {
   const { username, password } = req.body;
+  const usersRef = collection(db, "users")
+  const userQuery = query(usersRef, where("username", "==", username), limit(1));
 
   try {
-    const user = await User.findOne({ username });
+  const user = await getDocs(userQuery);
 
-    if (!user) {
+    if (user.empty) {
         //if it does not exist create it
-      return res.status(404).json({ message: 'User not found.' });
+        await createUser(username, password)
+      return res.status(404).json({ 
+        message: 'User not found. creating a new one... TRY AGAIN',
+     });
     }
 
     // Compare the provided password with the stored hashed password
-    const passwordMatch = await jwt.comparePasswords(password, user.password);
+    const passwordMatch = await jwt.comparePasswords(password, user.docs[0].data().password);
 
     if (!passwordMatch) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
     // Generate a JWT token
-    const token = jwt.generateToken({ userId: user._id });
+    const token = jwt.generateToken({ username: user.docs[0].data().username });
+    req.username = user.docs[0].data().username;
+    console.log(req.username);
 
     // Send the token to the client
     res.json({ token });
