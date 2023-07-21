@@ -1,6 +1,6 @@
 const db = require("./FirebaseController");
 const runConversation = require("../lib/OpenAi");
-const { collection, query, where, getDocs } = require("firebase/firestore");
+const { collection, query, where, getDocs, addDoc, orderBy } = require("firebase/firestore");
 
 exports.sendMessage = async (req, res) => {
   const { inputValue } = req.body;
@@ -51,11 +51,11 @@ exports.displayMessages = async (req, res) => {
   const userMessagesQuery = query(
     collection(db, "UserMessages"),
     where("author", "==", req.username)
-  );
+  ,orderBy("createdAt"));
   const AiMessagesQuery = query(
     collection(db, "AiMessages"),
-    where("author", "==", req.username)
-  );
+    where("author", "==", req.username),
+    orderBy("createdAt"));
 
   const userMessagesSnapshot = await getDocs(userMessagesQuery);
   const AiMessagesSnapshot = await getDocs(AiMessagesQuery);
@@ -75,8 +75,6 @@ exports.displayMessages = async (req, res) => {
       addMessage("assistant", aiMessage.content);
     }
   }
-
-  messages.push(new Message("user", msg));
 
   res.json(messages)
 };
