@@ -1,18 +1,18 @@
 const db = require("./FirebaseController");
 const runConversation = require("../lib/OpenAi");
-const { collection, query, where, getDocs, addDoc, orderBy } = require("firebase/firestore");
+const { collection, query, where, getDocs,getDoc, addDoc, orderBy, limit } = require("firebase/firestore");
 
 exports.sendMessage = async (req, res) => {
-  const { inputValue } = req.body;
+  const { messageContent } = req.body;
   try {
     const newUserMessage = await addDoc(collection(db, "UserMessages"), {
       role: "user",
-      content: inputValue,
+      content: messageContent,
       author: req.username,
       createdAt: new Date(),
       isAi: false,
     });
-    runConversation(inputValue, `${req.username}`).then(async (result) => {
+    runConversation(messageContent, `${req.username}`).then(async (result) => {
       const newAiMessage = await addDoc(collection(db, "AiMessages"), {
         role: "assistant",
         content: result,
@@ -20,10 +20,12 @@ exports.sendMessage = async (req, res) => {
         createdAt: new Date(),
         isAi: true,
       });
-      res.json({
-        message: "Messages created successfully",
-        aiMessage: newAiMessage.content,
-      });
+      const userMessagesSnapshot = await getDoc(newUserMessage);
+      const AiMessagesSnapshot = await getDoc(newAiMessage);
+      res.json([
+        userMessagesSnapshot.data(),
+        AiMessagesSnapshot.data()
+      ]);
     });
   } catch (err) {
     console.error(err);
